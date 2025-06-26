@@ -1,6 +1,8 @@
 // src/components/Login.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { loginUser } from '../../api/auth'
+import { useAuth } from '../../auth/AuthContext';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -8,21 +10,32 @@ const Login = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-
-  const handleLogin = (e) => {
+  const { login } = useAuth();
+  const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
 
-    console.log('Simulating login:', { username, password });
-    setTimeout(() => {
-      setLoading(false);
-      if (username && password) {
-        navigate('/'); 
+    try {
+      const response = await loginUser({ userName: username, password });
+      console.log(response);
+      // Assuming your backend returns a JWT in response.token or similar
+      const { token, userDetails } = response;
+      console.log("token",token, "userDetails", userDetails); // Adjust based on your backend response structure
+      
+      login(token, userDetails); // Update AuthContext and store token/user
+      navigate('/dashboard'); // Redirect to a protected page after successful login
+    } catch (err) {
+      console.error('Login error:', err);
+      // Check for specific error messages from the backend
+      if (err.response && err.response.data && err.response.data.message) {
+        setError(err.response.data.message);
       } else {
-        setError('Invalid username or password');
+        setError('Login failed. Please check your credentials.');
       }
-    }, 1000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

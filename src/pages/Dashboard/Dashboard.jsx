@@ -1,29 +1,92 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Container } from 'react-bootstrap';
+// Please ensure these paths are correct relative to Dashboard.jsx
+import Header from '../../components/Header';
+import ShapeManager from '../../components/ShapeManager';
+import CanvasView from '../../components/CanvasView';
 
 const Dashboard = () => {
-  const navigate = useNavigate();
+  const [activeView, setActiveView] = useState('shapes');
+  const [shapes, setShapes] = useState([]);
+  const [overlappingShapes, setOverlappingShapes] = useState([]);
+
+  // Mock data for development - replace with actual API calls
+  useEffect(() => {
+    // Simulate loading shapes from backend
+    const mockShapes = [
+      {
+        id: 1,
+        name: 'Rectangle 1',
+        type: 'rectangle',
+        coordinates: '100,100;200,100;200,150;100,150'
+      },
+      {
+        id: 2,
+        name: 'Circle 1',
+        type: 'circle',
+        coordinates: '150,125',
+        radius: 30
+      }
+    ];
+    setShapes(mockShapes);
+  }, []);
 
   const handleLogout = () => {
-    setAuthenticated(false);
-    navigate('/login');
+    // Clear any stored authentication data
+    localStorage.removeItem('authToken');
+    // Additional cleanup if needed
+  };
+
+  const addShape = (newShape) => {
+    const shapeWithId = { ...newShape, id: Date.now() };
+    setShapes(prev => [...prev, shapeWithId]);
+  };
+
+  const updateShape = (updatedShape) => {
+    setShapes(prev => prev.map(shape =>
+      shape.id === updatedShape.id ? updatedShape : shape
+    ));
+  };
+
+  const deleteShape = (shapeId) => {
+    setShapes(prev => prev.filter(shape => shape.id !== shapeId));
+  };
+
+  const checkOverlaps = async () => {
+    // TODO: Call backend API to check for overlaps
+    // For now, mock some overlapping shapes
+    const mockOverlaps = [1,2]; // IDs of overlapping shapes
+    setOverlappingShapes(mockOverlaps);
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-blue-50">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-lg text-center">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4">Welcome to Shape Management!</h2>
-        <p className="text-lg text-gray-600 mb-6">You are now logged in.</p>
-        <p className="text-md text-gray-700 mb-8">
-          This is where you'll integrate your shape management and drawing features.
-        </p>
-        <button
-          onClick={handleLogout}
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-        >
-          Logout
-        </button>
-      </div>
+    <div className="min-vh-100 bg-light">
+      <Header
+        activeView={activeView}
+        setActiveView={setActiveView}
+        onLogout={handleLogout}
+      />
+
+      <Container> {/* Using React-Bootstrap Container */}
+        {activeView === 'shapes' && (
+          <ShapeManager
+            shapes={shapes}
+            onAddShape={addShape}
+            onUpdateShape={updateShape}
+            onDeleteShape={deleteShape}
+            overlappingShapes={overlappingShapes}
+            onCheckOverlaps={checkOverlaps}
+          />
+        )}
+
+        {activeView === 'canvas' && (
+          <CanvasView
+            shapes={shapes}
+            overlappingShapes={overlappingShapes}
+            onCheckOverlaps={checkOverlaps}
+          />
+        )}
+      </Container>
     </div>
   );
 };
