@@ -1,24 +1,30 @@
+// src/components/ShapeManager.jsx
+
 import React, { useState } from 'react';
-import { 
-  Row, 
-  Col, 
-  Card, 
-  Button, 
-  Table, 
-  Modal, 
-  Form, 
+import {
+  Row,
+  Col,
+  Card,
+  Button,
+  Table,
+  Modal,
+  Form,
   Alert,
   Badge,
   ButtonGroup
 } from 'react-bootstrap';
 import axiosInstance from '../utils/axiosInstance';
-const ShapeManager = ({ 
-  shapes, 
-  onAddShape, 
-  onUpdateShape, 
-  onDeleteShape, 
+// Import the helper functions from the new file
+import { parseCoordinates, isRectangleCoordinates } from '../utils/shapeValidators';
+
+
+const ShapeManager = ({
+  shapes,
+  onAddShape,
+  onUpdateShape,
+  onDeleteShape,
   overlappingShapes,
-  onCheckOverlaps 
+  onCheckOverlaps
 }) => {
   const [showModal, setShowModal] = useState(false);
   const [editingShape, setEditingShape] = useState(null);
@@ -31,8 +37,8 @@ const ShapeManager = ({
     radius: ''
   });
   const [errors, setErrors] = useState({});
-  const[loading, setLoading] = useState(false);
-  const[apiError, setApiError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState('');
 
   const shapeTypes = [
     { value: 'rectangle', label: 'Rectangle' },
@@ -52,6 +58,7 @@ const ShapeManager = ({
     });
     setErrors({});
     setEditingShape(null);
+    setApiError('');
   };
 
   const handleShowModal = (shape = null) => {
@@ -92,45 +99,58 @@ const ShapeManager = ({
 
     // Validate name
     if (!formData.name.trim()) {
-      newErrors.name = 'Shape name is required';
-    } else if (shapes.some(s => s.name.toLowerCase() === formData.name.toLowerCase() && 
-                           (!editingShape || s.id !== editingShape.id))) {
-      newErrors.name = 'Shape name must be unique';
+      newErrors.name = 'Shape name is required.';
+    } else if (shapes.some(s => s.name.toLowerCase() === formData.name.toLowerCase() &&
+                                 (!editingShape || s.id !== editingShape.id))) {
+      newErrors.name = 'Shape name must be unique.';
     }
 
     // Validate coordinates based on shape type
     if (formData.type === 'circle') {
-      if (!formData.centerX || !formData.centerY) {
-        newErrors.centerX = 'Center X and Y coordinates are required for circles';
-        newErrors.centerY = 'Center X and Y coordinates are required for circles';
-      } else {
-        const centerX = parseFloat(formData.centerX);
-        const centerY = parseFloat(formData.centerY);
-        if (isNaN(centerX) || isNaN(centerY)) {
-          newErrors.centerX = 'Center coordinates must be valid numbers';
-          newErrors.centerY = 'Center coordinates must be valid numbers';
-        }
+      const parsedCenterX = parseFloat(formData.centerX);
+      const parsedCenterY = parseFloat(formData.centerY);
+      const parsedRadius = parseFloat(formData.radius);
+
+      if (isNaN(parsedCenterX) || isNaN(parsedCenterY)) {
+        newErrors.centerX = 'Center X and Y must be valid numbers.';
+        newErrors.centerY = 'Center X and Y must be valid numbers.'; // Add for clarity
+      } else if (parsedCenterX < 0 || parsedCenterY < 0) { // NEW VALIDATION: Negative coordinates
+        newErrors.centerX = 'Center coordinates cannot be negative.';
+        newErrors.centerY = 'Center coordinates cannot be negative.';
       }
-      
-      if (!formData.radius || formData.radius <= 0) {
-        newErrors.radius = 'Radius must be a positive number';
+
+      if (isNaN(parsedRadius) || parsedRadius <= 0) {
+        newErrors.radius = 'Radius must be a positive number.';
       }
-    } else {
+
+    } else { // For rectangle, triangle, polygon
       if (!formData.coordinates.trim()) {
-        newErrors.coordinates = 'Coordinates are required';
+        newErrors.coordinates = 'Coordinates are required for this shape type.';
       } else {
-        const coordPairs = formData.coordinates.split(';');
-        const minPoints = formData.type === 'triangle' ? 3 : 
-                         formData.type === 'rectangle' ? 4 : 3;
-        
-        if (coordPairs.length < minPoints) {
-          newErrors.coordinates = `${formData.type} requires at least ${minPoints} coordinate pairs`;
-        }
-        
-        // Validate coordinate format
-        const invalidCoord = coordPairs.find(pair => !/^\d+,\d+$/.test(pair.trim()));
-        if (invalidCoord) {
-          newErrors.coordinates = 'Coordinates must be in format: x1,y1;x2,y2;x3,y3...';
+        const parsedCoords = parseCoordinates(formData.coordinates); // Use imported helper
+
+        if (!parsedCoords) {
+          // parseCoordinates returns null if format is wrong OR if negative coords found
+          newErrors.coordinates = 'Coordinates must be in format: x1,y1;x2,y2;... (e.g., 10,10;100,10). Each coordinate must be a valid non-negative number.';
+        } else {
+          const numPoints = parsedCoords.length;
+
+          // Validate number of coordinate pairs based on type
+          if (formData.type === 'triangle') {
+            if (numPoints !== 3) {
+              newErrors.coordinates = 'A triangle requires exactly 3 coordinate pairs.';
+            }
+          } else if (formData.type === 'rectangle') {
+            if (numPoints !== 4) {
+              newErrors.coordinates = 'A rectangle requires exactly 4 coordinate pairs.';
+            } else if (!isRectangleCoordinates(parsedCoords)) { // Use imported helper for geometric validation
+              newErrors.coordinates = 'The provided coordinates do not form a valid rectangle.';
+            }
+          } else if (formData.type === 'polygon') {
+            if (numPoints < 3) {
+              newErrors.coordinates = 'A polygon requires at least 3 coordinate pairs.';
+            }
+          }
         }
       }
     }
@@ -141,14 +161,14 @@ const ShapeManager = ({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setApiError(''); // Clear previous API errors
-  
+    setApiError('');
+
     if (!validateForm()) {
       return;
     }
-  
+
     let payload;
-  
+
     if (formData.type === 'circle') {
       payload = {
         name: formData.name.trim(),
@@ -158,7 +178,7 @@ const ShapeManager = ({
         centerY: parseFloat(formData.centerY),
         radius: parseFloat(formData.radius)
       };
-    } else { // rectangle, triangle, polygon
+    } else {
       payload = {
         name: formData.name.trim(),
         type: formData.type,
@@ -168,52 +188,54 @@ const ShapeManager = ({
         radius: null
       };
     }
-  
-    // --- CRUCIAL CHANGE HERE: Conditionally add ID to payload ---
-    // If we are editing, add the ID to the payload.
-    // If we are adding, the payload should NOT contain an ID.
+
     if (editingShape) {
-      payload.id = editingShape.id; // Add ID only if editing
+      payload.id = editingShape.id;
     }
-    // --- END CRUCIAL CHANGE ---
-  
-    setLoading(true); // Start loading
-  
+
+    setLoading(true);
+
     try {
       if (editingShape) {
-        // UPDATE Existing Shape
         const response = await axiosInstance.put(`/shapes/${editingShape.id}`, payload);
-        onUpdateShape(response.data); // Pass the updated shape (from backend response) to parent
+        onUpdateShape(response.data);
         console.log("Shape updated:", response.data);
       } else {
-        // ADD New Shape
-        // The payload for POST will NOT have an 'id' property due to the conditional addition above
         const response = await axiosInstance.post('/shapes', payload);
-        onAddShape(response.data); // Pass the newly created shape (with backend ID) to parent
+        onAddShape(response.data);
         console.log("Shape added:", response.data);
       }
-  
-      handleCloseModal(); // Close modal on success
-  
+
+      handleCloseModal();
+
     } catch (err) {
       console.error('API Error:', err);
       if (err.response && err.response.data && err.response.data.message) {
-        setApiError(err.response.data.message); // Display backend error message
+        setApiError(err.response.data.message);
       } else {
         setApiError('An unexpected error occurred. Please try again.');
       }
     } finally {
-      setLoading(false); // Stop loading
+      setLoading(false);
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    
-    // Clear specific error when user starts typing
+
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+    // Clear related errors when type changes or specific fields are typed
+    if (name === 'type') {
+        setErrors(prev => ({ ...prev, coordinates: '', centerX: '', centerY: '', radius: '' }));
+    } else if (name === 'centerX' || name === 'centerY') {
+        if (errors.centerX || errors.centerY) { // Clear combined errors if either is typed
+            setErrors(prev => ({ ...prev, centerX: '', centerY: '' }));
+        }
+    } else if (name === 'radius' && errors.radius) {
+        setErrors(prev => ({ ...prev, radius: '' }));
     }
   };
 
@@ -224,7 +246,7 @@ const ShapeManager = ({
     return shape.coordinates;
   };
 
-  const isOverlapping = (shapeId) => overlappingShapes.includes(shapeId);
+  const isOverlapping = (shapeId) => overlappingShapes && overlappingShapes.includes(shapeId);
 
   return (
     <>
@@ -263,7 +285,7 @@ const ShapeManager = ({
                   </thead>
                   <tbody>
                     {shapes.map(shape => (
-                      <tr 
+                      <tr
                         key={shape.id}
                         className={isOverlapping(shape.id) ? 'table-warning' : ''}
                       >
@@ -301,15 +323,17 @@ const ShapeManager = ({
                         </td>
                         <td>
                           <ButtonGroup size="sm">
-                            <Button 
-                              variant="outline-primary" 
+                            <Button
+                              variant="outline-primary"
                               onClick={() => handleShowModal(shape)}
+                              disabled={loading}
                             >
                               <i className="fas fa-edit"></i>
                             </Button>
-                            <Button 
-                              variant="outline-danger" 
+                            <Button
+                              variant="outline-danger"
                               onClick={() => onDeleteShape(shape.id)}
+                              disabled={loading}
                             >
                               <i className="fas fa-trash"></i>
                             </Button>
@@ -334,6 +358,7 @@ const ShapeManager = ({
         </Modal.Header>
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
+            {apiError && <Alert variant="danger">{apiError}</Alert>}
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
@@ -392,21 +417,25 @@ const ShapeManager = ({
                       value={formData.coordinates}
                       onChange={handleInputChange}
                       isInvalid={!!errors.coordinates}
-                      placeholder="x1,y1;x2,y2;x3,y3... (e.g., 10,10;100,10;100,100;10,100)"
+                      placeholder="x1,y1;x2,y2;x3,y3... (e.g., 10,10;100,10;100,100;10,100 for rectangle)"
                     />
                   )}
                   <Form.Control.Feedback type="invalid">
                     {formData.type === 'circle' ? errors.centerX : errors.coordinates}
                   </Form.Control.Feedback>
                   <Form.Text className="text-muted">
-                    {formData.type === 'circle' ? 
-                      'Enter the center X coordinate' : 
-                      'Enter coordinate pairs separated by semicolons'
+                    {formData.type === 'circle' ?
+                      'Enter the center X coordinate (must be non-negative)' :
+                      `Enter coordinate pairs separated by semicolons. ${
+                          formData.type === 'triangle' ? 'Requires 3 pairs.' :
+                          formData.type === 'rectangle' ? 'Requires 4 pairs.' :
+                          'Requires at least 3 pairs.'
+                      } Coordinates must be non-negative.`
                     }
                   </Form.Text>
                 </Form.Group>
               </Col>
-              
+
               {formData.type === 'circle' && (
                 <>
                   <Col md={6}>
@@ -425,7 +454,7 @@ const ShapeManager = ({
                         {errors.centerY}
                       </Form.Control.Feedback>
                       <Form.Text className="text-muted">
-                        Enter the center Y coordinate
+                        Enter the center Y coordinate (must be non-negative)
                       </Form.Text>
                     </Form.Group>
                   </Col>
@@ -445,6 +474,9 @@ const ShapeManager = ({
                       <Form.Control.Feedback type="invalid">
                         {errors.radius}
                       </Form.Control.Feedback>
+                      <Form.Text className="text-muted">
+                        Enter the radius (must be a positive number)
+                      </Form.Text>
                     </Form.Group>
                   </Col>
                 </>
@@ -452,11 +484,11 @@ const ShapeManager = ({
             </Row>
           </Modal.Body>
           <Modal.Footer>
-            <Button variant="secondary" onClick={handleCloseModal}>
+            <Button variant="secondary" onClick={handleCloseModal} disabled={loading}>
               Cancel
             </Button>
-            <Button variant="primary" type="submit">
-              {editingShape ? 'Update Shape' : 'Add Shape'}
+            <Button variant="primary" type="submit" disabled={loading}>
+              {loading ? 'Saving...' : editingShape ? 'Update Shape' : 'Add Shape'}
             </Button>
           </Modal.Footer>
         </Form>
