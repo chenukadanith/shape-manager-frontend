@@ -11,7 +11,7 @@ import {
   Badge,
   ButtonGroup
 } from 'react-bootstrap';
-
+import axiosInstance from '../utils/axiosInstance';
 const ShapeManager = ({ 
   shapes, 
   onAddShape, 
@@ -31,6 +31,8 @@ const ShapeManager = ({
     radius: ''
   });
   const [errors, setErrors] = useState({});
+  const[loading, setLoading] = useState(false);
+  const[apiError, setApiError] = useState('');
 
   const shapeTypes = [
     { value: 'rectangle', label: 'Rectangle' },
@@ -137,18 +139,18 @@ const ShapeManager = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setApiError(''); // Clear previous API errors
+  
     if (!validateForm()) {
       return;
     }
-
-    let shapeData;
-    
+  
+    let payload;
+  
     if (formData.type === 'circle') {
-      shapeData = {
-        id: editingShape ? editingShape.id : Date.now(),
+      payload = {
         name: formData.name.trim(),
         type: formData.type,
         coordinates: null,
@@ -156,9 +158,8 @@ const ShapeManager = ({
         centerY: parseFloat(formData.centerY),
         radius: parseFloat(formData.radius)
       };
-    } else {
-      shapeData = {
-        id: editingShape ? editingShape.id : Date.now(),
+    } else { // rectangle, triangle, polygon
+      payload = {
         name: formData.name.trim(),
         type: formData.type,
         coordinates: formData.coordinates.trim(),
@@ -167,14 +168,43 @@ const ShapeManager = ({
         radius: null
       };
     }
-
+  
+    // --- CRUCIAL CHANGE HERE: Conditionally add ID to payload ---
+    // If we are editing, add the ID to the payload.
+    // If we are adding, the payload should NOT contain an ID.
     if (editingShape) {
-      onUpdateShape(shapeData);
-    } else {
-      onAddShape(shapeData);
+      payload.id = editingShape.id; // Add ID only if editing
     }
-
-    handleCloseModal();
+    // --- END CRUCIAL CHANGE ---
+  
+    setLoading(true); // Start loading
+  
+    try {
+      if (editingShape) {
+        // UPDATE Existing Shape
+        const response = await axiosInstance.put(`/shapes/${editingShape.id}`, payload);
+        onUpdateShape(response.data); // Pass the updated shape (from backend response) to parent
+        console.log("Shape updated:", response.data);
+      } else {
+        // ADD New Shape
+        // The payload for POST will NOT have an 'id' property due to the conditional addition above
+        const response = await axiosInstance.post('/shapes', payload);
+        onAddShape(response.data); // Pass the newly created shape (with backend ID) to parent
+        console.log("Shape added:", response.data);
+      }
+  
+      handleCloseModal(); // Close modal on success
+  
+    } catch (err) {
+      console.error('API Error:', err);
+      if (err.response && err.response.data && err.response.data.message) {
+        setApiError(err.response.data.message); // Display backend error message
+      } else {
+        setApiError('An unexpected error occurred. Please try again.');
+      }
+    } finally {
+      setLoading(false); // Stop loading
+    }
   };
 
   const handleInputChange = (e) => {

@@ -15,7 +15,6 @@ const Dashboard = () => {
   const [overlappingShapes, setOverlappingShapes] = useState([]);
   const { logout } = useAuth();
 
-  // Mock data for development - replace with actual API calls
   useEffect(() => {
     const fetchShapes = async () => {
       console.log("fetching shapes");
@@ -52,8 +51,7 @@ const Dashboard = () => {
   };
 
   const addShape = (newShape) => {
-    const shapeWithId = { ...newShape, id: Date.now() };
-    setShapes(prev => [...prev, shapeWithId]);
+    setShapes(prev => [...prev, newShape]); // Use backend id
   };
 
   const updateShape = (updatedShape) => {
@@ -62,9 +60,29 @@ const Dashboard = () => {
     ));
   };
 
-  const deleteShape = (shapeId) => {
-    setShapes(prev => prev.filter(shape => shape.id !== shapeId));
+  const deleteShape = async (shapeId) => {
+    try {
+      // You might want to show a temporary loading state or disable buttons
+      // setDeletingShapeId(shapeId); // Example for a specific loading state per shape
+
+      // Make the API call to your backend's DELETE endpoint
+      // URL: http://localhost:8080/api/shapes/{shapeId}
+      await axiosInstance.delete(`/shapes/${shapeId}`);
+
+      // If the API call is successful, then update the local state
+      setShapes(prevShapes => prevShapes.filter(shape => shape.id !== shapeId));
+      console.log(`Shape with ID ${shapeId} deleted successfully.`);
+     
+
+    } catch (err) {
+      console.error('Error deleting shape:', err);
+      
+      
+    } finally {
+      console.log("shape deleted");
+    }
   };
+
 
   const checkOverlaps = async () => {
     try {

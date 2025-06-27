@@ -4,7 +4,9 @@ import { AuthProvider } from './auth/AuthContext'; // Import AuthProvider
 import PrivateRoute from './auth/PrivateRoute';   // Import PrivateRoute component
 import LoginPage from './pages/auth/Login';       // Renamed for consistency with previous example
 import SignupPage from './pages/auth/SignUp';     // Renamed for consistency with previous example
-import DashboardPage from './pages/Dashboard/Dashboard'; // Renamed for consistency
+import DashboardPage from './pages/Dashboard/Dashboard'; 
+import ShapeManager from './components/ShapeManager';
+// Renamed for consistency
 
 
 function App() {
@@ -23,6 +25,7 @@ function App() {
           {/* Protected Routes - Use the PrivateRoute component */}
           <Route element={<PrivateRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            {/* <Route path="/shapeManager" element={<ShapeManager />} /> */}
             {/* Add other protected routes here if needed */}
           </Route>
 
