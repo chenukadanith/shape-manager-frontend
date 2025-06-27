@@ -159,9 +159,8 @@ const CanvasView = ({ shapes, overlappingShapes, onCheckOverlaps }) => {
   };
 
   const drawCircle = (ctx, shape) => {
-    const [x, y] = shape.coordinates.split(',').map(Number);
-    const centerX = x * scale;
-    const centerY = y * scale;
+    const centerX = shape.centerX * scale;
+    const centerY = shape.centerY * scale;
     const radius = shape.radius * scale;
 
     ctx.beginPath();
@@ -174,9 +173,8 @@ const CanvasView = ({ shapes, overlappingShapes, onCheckOverlaps }) => {
     let labelX, labelY;
 
     if (shape.type === 'circle') {
-      const [x, y] = shape.coordinates.split(',').map(Number);
-      labelX = x * scale;
-      labelY = y * scale;
+      labelX = shape.centerX * scale;
+      labelY = shape.centerY * scale;
     } else {
       const coords = parseCoordinates(shape.coordinates);
       labelX = coords.reduce((sum, coord) => sum + coord.x, 0) / coords.length;

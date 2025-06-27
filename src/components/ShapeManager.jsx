@@ -26,6 +26,8 @@ const ShapeManager = ({
     name: '',
     type: 'rectangle',
     coordinates: '',
+    centerX: '',
+    centerY: '',
     radius: ''
   });
   const [errors, setErrors] = useState({});
@@ -42,6 +44,8 @@ const ShapeManager = ({
       name: '',
       type: 'rectangle',
       coordinates: '',
+      centerX: '',
+      centerY: '',
       radius: ''
     });
     setErrors({});
@@ -51,12 +55,25 @@ const ShapeManager = ({
   const handleShowModal = (shape = null) => {
     if (shape) {
       setEditingShape(shape);
-      setFormData({
-        name: shape.name,
-        type: shape.type,
-        coordinates: shape.coordinates || '',
-        radius: shape.radius || ''
-      });
+      if (shape.type === 'circle') {
+        setFormData({
+          name: shape.name,
+          type: shape.type,
+          coordinates: '',
+          centerX: shape.centerX || '',
+          centerY: shape.centerY || '',
+          radius: shape.radius || ''
+        });
+      } else {
+        setFormData({
+          name: shape.name,
+          type: shape.type,
+          coordinates: shape.coordinates || '',
+          centerX: '',
+          centerY: '',
+          radius: ''
+        });
+      }
     } else {
       resetForm();
     }
@@ -81,10 +98,16 @@ const ShapeManager = ({
 
     // Validate coordinates based on shape type
     if (formData.type === 'circle') {
-      if (!formData.coordinates.trim()) {
-        newErrors.coordinates = 'Center coordinates are required for circles';
-      } else if (!/^\d+,\d+$/.test(formData.coordinates.trim())) {
-        newErrors.coordinates = 'Circle coordinates must be in format: x,y';
+      if (!formData.centerX || !formData.centerY) {
+        newErrors.centerX = 'Center X and Y coordinates are required for circles';
+        newErrors.centerY = 'Center X and Y coordinates are required for circles';
+      } else {
+        const centerX = parseFloat(formData.centerX);
+        const centerY = parseFloat(formData.centerY);
+        if (isNaN(centerX) || isNaN(centerY)) {
+          newErrors.centerX = 'Center coordinates must be valid numbers';
+          newErrors.centerY = 'Center coordinates must be valid numbers';
+        }
       }
       
       if (!formData.radius || formData.radius <= 0) {
@@ -121,15 +144,32 @@ const ShapeManager = ({
       return;
     }
 
-    const shapeData = {
-      name: formData.name.trim(),
-      type: formData.type,
-      coordinates: formData.coordinates.trim(),
-      ...(formData.type === 'circle' && { radius: parseFloat(formData.radius) })
-    };
+    let shapeData;
+    
+    if (formData.type === 'circle') {
+      shapeData = {
+        id: editingShape ? editingShape.id : Date.now(),
+        name: formData.name.trim(),
+        type: formData.type,
+        coordinates: null,
+        centerX: parseFloat(formData.centerX),
+        centerY: parseFloat(formData.centerY),
+        radius: parseFloat(formData.radius)
+      };
+    } else {
+      shapeData = {
+        id: editingShape ? editingShape.id : Date.now(),
+        name: formData.name.trim(),
+        type: formData.type,
+        coordinates: formData.coordinates.trim(),
+        centerX: null,
+        centerY: null,
+        radius: null
+      };
+    }
 
     if (editingShape) {
-      onUpdateShape({ ...shapeData, id: editingShape.id });
+      onUpdateShape(shapeData);
     } else {
       onAddShape(shapeData);
     }
@@ -149,7 +189,7 @@ const ShapeManager = ({
 
   const getCoordinateDisplay = (shape) => {
     if (shape.type === 'circle') {
-      return `Center: ${shape.coordinates}, Radius: ${shape.radius}`;
+      return `Center: (${shape.centerX}, ${shape.centerY}), Radius: ${shape.radius}`;
     }
     return shape.coordinates;
   };
@@ -300,28 +340,37 @@ const ShapeManager = ({
             </Row>
 
             <Row>
-              <Col md={formData.type === 'circle' ? 8 : 12}>
+              <Col md={formData.type === 'circle' ? 6 : 12}>
                 <Form.Group className="mb-3">
                   <Form.Label>
-                    {formData.type === 'circle' ? 'Center Coordinates' : 'Coordinates'}
+                    {formData.type === 'circle' ? 'Center X' : 'Coordinates'}
                   </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="coordinates"
-                    value={formData.coordinates}
-                    onChange={handleInputChange}
-                    isInvalid={!!errors.coordinates}
-                    placeholder={formData.type === 'circle' ? 
-                      'x,y (e.g., 100,100)' : 
-                      'x1,y1;x2,y2;x3,y3... (e.g., 10,10;100,10;100,100;10,100)'
-                    }
-                  />
+                  {formData.type === 'circle' ? (
+                    <Form.Control
+                      type="number"
+                      name="centerX"
+                      value={formData.centerX}
+                      onChange={handleInputChange}
+                      isInvalid={!!errors.centerX}
+                      placeholder="Enter center X coordinate"
+                      step="0.1"
+                    />
+                  ) : (
+                    <Form.Control
+                      type="text"
+                      name="coordinates"
+                      value={formData.coordinates}
+                      onChange={handleInputChange}
+                      isInvalid={!!errors.coordinates}
+                      placeholder="x1,y1;x2,y2;x3,y3... (e.g., 10,10;100,10;100,100;10,100)"
+                    />
+                  )}
                   <Form.Control.Feedback type="invalid">
-                    {errors.coordinates}
+                    {formData.type === 'circle' ? errors.centerX : errors.coordinates}
                   </Form.Control.Feedback>
                   <Form.Text className="text-muted">
                     {formData.type === 'circle' ? 
-                      'Enter the center point coordinates' : 
+                      'Enter the center X coordinate' : 
                       'Enter coordinate pairs separated by semicolons'
                     }
                   </Form.Text>
@@ -329,24 +378,46 @@ const ShapeManager = ({
               </Col>
               
               {formData.type === 'circle' && (
-                <Col md={4}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Radius</Form.Label>
-                    <Form.Control
-                      type="number"
-                      name="radius"
-                      value={formData.radius}
-                      onChange={handleInputChange}
-                      isInvalid={!!errors.radius}
-                      placeholder="Enter radius"
-                      min="1"
-                      step="0.1"
-                    />
-                    <Form.Control.Feedback type="invalid">
-                      {errors.radius}
-                    </Form.Control.Feedback>
-                  </Form.Group>
-                </Col>
+                <>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Center Y</Form.Label>
+                      <Form.Control
+                        type="number"
+                        name="centerY"
+                        value={formData.centerY}
+                        onChange={handleInputChange}
+                        isInvalid={!!errors.centerY}
+                        placeholder="Enter center Y coordinate"
+                        step="0.1"
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.centerY}
+                      </Form.Control.Feedback>
+                      <Form.Text className="text-muted">
+                        Enter the center Y coordinate
+                      </Form.Text>
+                    </Form.Group>
+                  </Col>
+                  <Col md={6}>
+                    <Form.Group className="mb-3">
+                      <Form.Label>Radius</Form.Label>
+                      <Form.Control
+                        type="number"
+                        name="radius"
+                        value={formData.radius}
+                        onChange={handleInputChange}
+                        isInvalid={!!errors.radius}
+                        placeholder="Enter radius"
+                        min="1"
+                        step="0.1"
+                      />
+                      <Form.Control.Feedback type="invalid">
+                        {errors.radius}
+                      </Form.Control.Feedback>
+                    </Form.Group>
+                  </Col>
+                </>
               )}
             </Row>
           </Modal.Body>

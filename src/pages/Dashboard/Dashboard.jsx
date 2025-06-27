@@ -4,31 +4,45 @@ import { Container } from 'react-bootstrap';
 import Header from '../../components/Header';
 import ShapeManager from '../../components/ShapeManager';
 import CanvasView from '../../components/CanvasView';
+import { useAuth } from '../../auth/AuthContext';
+import axiosInstance from '../../utils/axiosInstance';
+ // Import useAuth to potentially handle logout on error
+
 
 const Dashboard = () => {
   const [activeView, setActiveView] = useState('shapes');
   const [shapes, setShapes] = useState([]);
   const [overlappingShapes, setOverlappingShapes] = useState([]);
+  const { logout } = useAuth();
 
   // Mock data for development - replace with actual API calls
   useEffect(() => {
-    // Simulate loading shapes from backend
-    const mockShapes = [
-      {
-        id: 1,
-        name: 'Rectangle 1',
-        type: 'rectangle',
-        coordinates: '100,100;200,100;200,150;100,150'
-      },
-      {
-        id: 2,
-        name: 'Circle 1',
-        type: 'circle',
-        coordinates: '150,125',
-        radius: 30
+    const fetchShapes = async () => {
+      console.log("fetching shapes");
+      try {
+        // setLoading(true); // Start loading
+        // setError(null);   // Clear previous errors
+
+        const response = await axiosInstance.get('/shapes'); // Call your backend API
+        // Assuming your backend returns an array of shape objects directly in response.data
+        setShapes(response.data);
+
+      } catch (err) {
+        console.error('Error fetching shapes:', err);
+        if (err.response && err.response.status === 401) {
+          // If token expired or unauthorized, log out the user
+          setError('Session expired or unauthorized. Please log in again.');
+          // logout(); // Use the logout function from AuthContext
+        } else {
+          setError('Failed to load shapes. Please try again later.');
+        }
+      } finally {
+        // setLoading(false); // End loading
+        console.log("shapes fetched");
       }
-    ];
-    setShapes(mockShapes);
+    };
+
+    fetchShapes();
   }, []);
 
   const handleLogout = () => {
@@ -53,10 +67,23 @@ const Dashboard = () => {
   };
 
   const checkOverlaps = async () => {
-    // TODO: Call backend API to check for overlaps
-    // For now, mock some overlapping shapes
-    const mockOverlaps = [1,2]; // IDs of overlapping shapes
-    setOverlappingShapes(mockOverlaps);
+    try {
+      // You might want to show a loading state for this operation too
+      // setLoadingOverlaps(true);
+      // setErrorOverlaps(null);
+
+      const response = await axiosInstance.get('/shapes/overlaps'); // Adjust this endpoint if needed
+      // Assuming the backend returns an array of numbers directly: e.g., [1, 2, 3]
+      setOverlappingShapes(response.data);
+      console.log("Overlapping shapes fetched:", response.data);
+
+    } catch (err) {
+      console.error('Error checking for overlaps:', err);
+      
+      setOverlappingShapes([]); // Clear overlaps on error
+    } finally {
+      // setLoadingOverlaps(false);
+    }
   };
 
   return (
