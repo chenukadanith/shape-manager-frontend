@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../../utils/axiosInstance';
 
 const Signup = () => {
   const [username, setUsername] = useState('');
@@ -9,7 +10,7 @@ const Signup = () => {
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
 
-  const handleSignup = (e) => {
+  const handleSignup = async (e) => { // Made the function async
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -19,14 +20,31 @@ const Signup = () => {
       return;
     }
 
-    console.log('Simulating signup:', { username, password });
-    setSuccess('Registration successful! Please log in.');
-    setUsername('');
-    setPassword('');
-    setConfirmPassword('');
-    setTimeout(() => {
-      navigate('/login');
-    }, 1500);
+
+    try {
+      // API call to your backend signup endpoint
+      const response = await axiosInstance.post('/auth/register', {
+        username: username,
+        password: password,
+        
+      });
+
+      setSuccess('Registration successful! Please log in.');
+      setUsername('');
+      setPassword('');
+      setConfirmPassword('');
+
+      setTimeout(() => {
+        navigate('/login');
+      }, 1500);
+
+    } catch (err) {
+      console.error('Signup error:', err);
+      
+    } finally {
+       
+      console.log("signup successful");
+    }
   };
 
   return (
@@ -35,7 +53,6 @@ const Signup = () => {
         <div className="card-body">
           <h2 className="card-title text-center mb-2">Sign Up</h2>
           <p className="text-center text-muted mb-5" style={{ fontSize: '1rem' }}>
-            Join us and start managing your shapes
           </p>
           <form onSubmit={handleSignup}>
             <div className="mb-3">
