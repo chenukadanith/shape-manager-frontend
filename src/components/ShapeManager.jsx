@@ -16,6 +16,8 @@ import {
 import axiosInstance from '../utils/axiosInstance';
 // Import the helper functions from the new file
 import { parseCoordinates, isRectangleCoordinates } from '../utils/shapeValidators';
+// Import React Icons
+import { FaPlus, FaSearch, FaEdit, FaTrash, FaExclamationTriangle, FaCheck, FaInfoCircle } from 'react-icons/fa';
 
 
 const ShapeManager = ({
@@ -257,11 +259,11 @@ const ShapeManager = ({
               <h4 className="mb-0">Shape Management</h4>
               <ButtonGroup>
                 <Button variant="primary" onClick={() => handleShowModal()}>
-                  <i className="fas fa-plus me-1"></i>
+                  <FaPlus className="me-1" />
                   Add Shape
                 </Button>
                 <Button variant="info" onClick={onCheckOverlaps}>
-                  <i className="fas fa-search me-1"></i>
+                  <FaSearch className="me-1" />
                   Check Overlaps
                 </Button>
               </ButtonGroup>
@@ -269,7 +271,7 @@ const ShapeManager = ({
             <Card.Body>
               {shapes.length === 0 ? (
                 <Alert variant="info" className="text-center">
-                  <i className="fas fa-info-circle me-2"></i>
+                  <FaInfoCircle className="me-2" />
                   No shapes created yet. Click "Add Shape" to get started.
                 </Alert>
               ) : (
@@ -293,7 +295,7 @@ const ShapeManager = ({
                           <strong>{shape.name}</strong>
                           {isOverlapping(shape.id) && (
                             <Badge bg="warning" className="ms-2">
-                              <i className="fas fa-exclamation-triangle me-1"></i>
+                              <FaExclamationTriangle className="me-1" />
                               Overlapping
                             </Badge>
                           )}
@@ -311,12 +313,12 @@ const ShapeManager = ({
                         <td>
                           {isOverlapping(shape.id) ? (
                             <Badge bg="warning">
-                              <i className="fas fa-exclamation-triangle me-1"></i>
+                              <FaExclamationTriangle className="me-1" />
                               Overlapping
                             </Badge>
                           ) : (
                             <Badge bg="success">
-                              <i className="fas fa-check me-1"></i>
+                              <FaCheck className="me-1" />
                               Clear
                             </Badge>
                           )}
@@ -328,14 +330,14 @@ const ShapeManager = ({
                               onClick={() => handleShowModal(shape)}
                               disabled={loading}
                             >
-                              <i className="fas fa-edit"></i>
+                              <FaEdit />
                             </Button>
                             <Button
                               variant="outline-danger"
                               onClick={() => onDeleteShape(shape.id)}
                               disabled={loading}
                             >
-                              <i className="fas fa-trash"></i>
+                              <FaTrash />
                             </Button>
                           </ButtonGroup>
                         </td>
