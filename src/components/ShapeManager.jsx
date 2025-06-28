@@ -207,7 +207,7 @@ const ShapeManager = ({
         onAddShape(response.data);
         console.log("Shape added:", response.data);
       }
-
+      onCheckOverlaps();
       handleCloseModal();
 
     } catch (err) {

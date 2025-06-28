@@ -72,6 +72,7 @@ const Dashboard = () => {
       // If the API call is successful, then update the local state
       setShapes(prevShapes => prevShapes.filter(shape => shape.id !== shapeId));
       console.log(`Shape with ID ${shapeId} deleted successfully.`);
+      checkOverlaps();
      
 
     } catch (err) {
