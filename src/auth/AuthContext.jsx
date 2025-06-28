@@ -1,4 +1,4 @@
-// src/auth/AuthContext.js
+
 import { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
@@ -16,13 +16,12 @@ export const AuthProvider = ({ children }) => {
   // Load auth state from localStorage on initial render
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
-    const storedUser = localStorage.getItem('user'); // Store user data if needed
+    const storedUser = localStorage.getItem('user'); 
 
     if (storedToken) {
       setToken(storedToken);
       setIsAuthenticated(true);
       try {
-        // You might decode the JWT here to get user info, or fetch it from an API
         setUser(storedUser ? JSON.parse(storedUser) : null);
       } catch (e) {
         console.error("Failed to parse user data from localStorage", e);

@@ -1,6 +1,4 @@
-// src/utils/shapeValidators.jsx
-
-// Helper to parse coordinate string into an array of {x, y} objects
+// parse the coordinates
 export const parseCoordinates = (coordinatesString) => {
     try {
       const pairs = coordinatesString.split(';');
@@ -21,21 +19,20 @@ export const parseCoordinates = (coordinatesString) => {
       return null; 
     }
   };
-  
+// calculate the distance squared
   const calculateDistanceSq = (p1, p2) => {
     return (p2.x - p1.x)**2 + (p2.y - p1.y)**2;
   };
-  
+// calculate the dot product
   const calculateDotProduct = (v1, v2) => {
     return v1.x * v2.x + v1.y * v2.y;
   };
-  
+// check if the points are collinear
   const isCollinear = (p1, p2, p3) => {
       const epsilon = 1e-9; 
       return Math.abs((p2.y - p1.y) * (p3.x - p2.x) - (p3.y - p2.y) * (p2.x - p1.x)) < epsilon;
   };
-  
-  // Helper to determine if 4 points form a rectangle
+// check if the coordinates form a rectangle
   export const isRectangleCoordinates = (coords) => {
       if (coords.length !== 4) return false;
   

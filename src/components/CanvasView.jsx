@@ -10,7 +10,7 @@ const CanvasView = ({ shapes, overlappingShapes, onCheckOverlaps }) => {
     const handleResize = () => {
       const container = canvasRef.current?.parentElement;
       if (container) {
-        const maxWidth = container.clientWidth - 40; // Account for padding
+        const maxWidth = container.clientWidth - 40; 
         const maxHeight = 600;
         
         setCanvasSize({
@@ -29,6 +29,7 @@ const CanvasView = ({ shapes, overlappingShapes, onCheckOverlaps }) => {
     drawShapes();
   }, [shapes, overlappingShapes, canvasSize, scale]);
 
+  // draw the shapes
   const drawShapes = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -203,7 +204,7 @@ const CanvasView = ({ shapes, overlappingShapes, onCheckOverlaps }) => {
     ctx.fillText(shape.name, labelX, labelY);
     ctx.restore();
   };
-
+//common functions
   const handleZoomIn = () => {
     setScale(prev => Math.min(prev * 1.2, 3));
   };

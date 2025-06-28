@@ -9,12 +9,12 @@ const Signup = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const navigate = useNavigate();
-
-  const handleSignup = async (e) => { // Made the function async
+// signup function
+  const handleSignup = async (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
-
+// check the password
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
       return;

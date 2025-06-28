@@ -48,7 +48,7 @@ const ShapeManager = ({
     { value: 'circle', label: 'Circle' },
     { value: 'polygon', label: 'Polygon' }
   ];
-
+// reset the form
   const resetForm = () => {
     setFormData({
       name: '',
@@ -62,7 +62,7 @@ const ShapeManager = ({
     setEditingShape(null);
     setApiError('');
   };
-
+// show the modal
   const handleShowModal = (shape = null) => {
     if (shape) {
       setEditingShape(shape);
@@ -90,7 +90,7 @@ const ShapeManager = ({
     }
     setShowModal(true);
   };
-
+// close the modal
   const handleCloseModal = () => {
     setShowModal(false);
     resetForm();
@@ -129,15 +129,12 @@ const ShapeManager = ({
       if (!formData.coordinates.trim()) {
         newErrors.coordinates = 'Coordinates are required for this shape type.';
       } else {
-        const parsedCoords = parseCoordinates(formData.coordinates); // Use imported helper
-
+        const parsedCoords = parseCoordinates(formData.coordinates);
         if (!parsedCoords) {
-          // parseCoordinates returns null if format is wrong OR if negative coords found
           newErrors.coordinates = 'Coordinates must be in format: x1,y1;x2,y2;... (e.g., 10,10;100,10). Each coordinate must be a valid non-negative number.';
         } else {
           const numPoints = parsedCoords.length;
 
-          // Validate number of coordinate pairs based on type
           if (formData.type === 'triangle') {
             if (numPoints !== 3) {
               newErrors.coordinates = 'A triangle requires exactly 3 coordinate pairs.';
@@ -160,7 +157,7 @@ const ShapeManager = ({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-
+// submit the form
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError('');
@@ -229,7 +226,6 @@ const ShapeManager = ({
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
     }
-    // Clear related errors when type changes or specific fields are typed
     if (name === 'type') {
         setErrors(prev => ({ ...prev, coordinates: '', centerX: '', centerY: '', radius: '' }));
     } else if (name === 'centerX' || name === 'centerY') {

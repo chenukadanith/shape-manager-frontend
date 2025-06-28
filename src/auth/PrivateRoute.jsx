@@ -5,10 +5,9 @@ import { useAuth } from './AuthContext';
 
 const PrivateRoute = () => {
   const { isAuthenticated, loading } = useAuth();
-
-  if (loading) { // <--- UNCOMMENT THIS BLOCK
-    // You can render a loading spinner here while checking auth status
-    return <div>Checking authentication status...</div>; // Or your loading spinner component
+// check the staus
+  if (loading) { 
+    return <div>Checking authentication status...</div>;
   }
 
   return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;

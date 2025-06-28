@@ -7,7 +7,7 @@ const Header = ({ activeView, setActiveView, onLogout }) => {
   const username = JSON.parse(localStorage.getItem('user')).username;
   // console.log(userData);
 
-
+// logout function
   const handleLogout = () => {
     if (onLogout) {
       onLogout();
@@ -26,8 +26,7 @@ const Header = ({ activeView, setActiveView, onLogout }) => {
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
 
         <Navbar.Collapse id="basic-navbar-nav">
-          {/* Main navigation links - pushed to the left by default */}
-          <Nav className="me-auto"> {/* This Nav takes up available space */}
+          <Nav className="me-auto"> 
             <Nav.Link
               active={activeView === 'shapes'}
               onClick={() => setActiveView('shapes')}
@@ -46,10 +45,9 @@ const Header = ({ activeView, setActiveView, onLogout }) => {
             </Nav.Link>
           </Nav>
 
-          {/* Combined Nav for Username and Logout Button */}
-          {/* This Nav will be pushed to the far right because of the 'me-auto' on the previous Nav */}
-          <Nav className="align-items-center"> {/* Align items vertically in the middle */}
-            <h5 className="mb-0 me-3 text-white">Welcome, {username}!</h5> {/* Added me-3 for spacing */}
+         
+          <Nav className="align-items-center"> 
+            <h5 className="mb-0 me-3 text-white">Welcome, {username}!</h5> 
 
             <Button variant="outline-light" onClick={handleLogout}>
               <i className="fas fa-sign-out-alt me-1"></i>

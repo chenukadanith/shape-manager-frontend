@@ -1,4 +1,3 @@
-// src/components/Login.jsx
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../../api/auth'
@@ -11,6 +10,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { login } = useAuth();
+// login function
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
@@ -19,15 +19,12 @@ const Login = () => {
     try {
       const response = await loginUser({ userName: username, password });
       console.log(response);
-      // Assuming your backend returns a JWT in response.token or similar
       const { token, userDetails } = response;
-      console.log("token",token, "userDetails", userDetails); // Adjust based on your backend response structure
-      
-      login(token, userDetails); // Update AuthContext and store token/user
-      navigate('/dashboard'); // Redirect to a protected page after successful login
+      console.log("token",token, "userDetails", userDetails); 
+      login(token, userDetails); 
+      navigate('/dashboard'); 
     } catch (err) {
       console.error('Login error:', err);
-      // Check for specific error messages from the backend
       if (err.response && err.response.data && err.response.data.message) {
         setError(err.response.data.message);
       } else {

@@ -1,32 +1,28 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './auth/AuthContext'; // Import AuthProvider
-import PrivateRoute from './auth/PrivateRoute';   // Import PrivateRoute component
-import LoginPage from './pages/auth/Login';       // Renamed for consistency with previous example
-import SignupPage from './pages/auth/SignUp';     // Renamed for consistency with previous example
+import { AuthProvider } from './auth/AuthContext'; 
+import PrivateRoute from './auth/PrivateRoute';   
+import LoginPage from './pages/auth/Login';      
+import SignupPage from './pages/auth/SignUp';    
 import DashboardPage from './pages/Dashboard/Dashboard'; 
 import ShapeManager from './components/ShapeManager';
-// Renamed for consistency
 
 
 function App() {
   return (
     <Router>
-      {/* Wrap your entire application with AuthProvider */}
       <AuthProvider>
-        {/* Optional: Render Navbar here if you want it on all pages */}
-        {/* <Navbar /> */} 
+       
 
         <Routes>
           {/* Public Routes */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
           
-          {/* Protected Routes - Use the PrivateRoute component */}
+          {/* Protected Routes  */}
           <Route element={<PrivateRoute />}>
             <Route path="/dashboard" element={<DashboardPage />} />
-            {/* <Route path="/shapeManager" element={<ShapeManager />} /> */}
-            {/* Add other protected routes here if needed */}
+            
           </Route>
 
           {/* Redirect users from the root path to login */}
